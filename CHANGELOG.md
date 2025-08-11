@@ -14,7 +14,6 @@ All notable changes to this project will be documented in this file.
 - **UI-Safe Translation**: Preserves Unity markup and formatting in translations
 - **Custom Prompts**: Context-specific translation instructions per StringTable
 - **String Normalization**: Automatic cleanup of translation artifacts
-- **Translation Metadata**: Tracking of confidence scores, model used, and timestamps
 - **Editor Integration**: Custom property drawers and Unity menu integration
 - **Progress Reporting**: Visual feedback during translation operations
 - **Error Handling**: Comprehensive error handling and Unity Console logging
