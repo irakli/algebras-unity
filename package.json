@@ -5,9 +5,6 @@
   "description": "AI-powered localization extension for Unity's Localization package using Algebras translation services.",
   "unity": "2021.3",
   "unityRelease": "0f1",
-  "documentationUrl": "https://docs.algebras.ai/unity",
-  "changelogUrl": "https://docs.algebras.ai/unity/changelog",
-  "licensesUrl": "https://docs.algebras.ai/unity/licenses",
   "dependencies": {
     "com.unity.localization": "1.4.0"
   },
