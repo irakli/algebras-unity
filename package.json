@@ -5,6 +5,13 @@
   "description": "AI-powered localization extension for Unity's Localization package using Algebras translation services.",
   "unity": "2021.3",
   "unityRelease": "0f1",
+  "homepage": "https://algebras.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/irakli/algebras-unity.git",
+    "directory": "Packages/com.algebras.localization"
+  },
+  "license": "MIT",
   "dependencies": {
     "com.unity.localization": "1.4.0"
   },
