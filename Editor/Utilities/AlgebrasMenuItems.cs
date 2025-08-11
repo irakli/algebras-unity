@@ -1,14 +1,14 @@
-using Algebras.Localization.Editor.Editor.ServiceProvider;
+using Algebras.Localization.Editor.ServiceProvider;
 using UnityEditor;
 using UnityEngine;
 using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 
-namespace Algebras.Localization.Editor.Editor.Utilities
+namespace Algebras.Localization.Editor.Utilities
 {
-	/// <summary>
-	///     Menu items for Algebras Localization package.
-	/// </summary>
-	public static class AlgebrasMenuItems
+    /// <summary>
+    ///     Menu items for Algebras Localization package.
+    /// </summary>
+    public static class AlgebrasMenuItems
     {
         private const string MenuRoot = "Assets/Create/Localization/";
         private const string WindowMenuRoot = "Window/Algebras Localization/";

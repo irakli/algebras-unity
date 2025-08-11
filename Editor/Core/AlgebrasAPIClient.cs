@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Algebras.Localization.Editor.Editor.Extension;
-using Algebras.Localization.Editor.Editor.ServiceProvider;
+using Algebras.Localization.Editor.Extension;
+using Algebras.Localization.Editor.ServiceProvider;
+using Algebras.Localization.Editor.Utils;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Algebras.Localization.Editor.Editor.Core
+namespace Algebras.Localization.Editor.Core
 {
     /// <summary>
     ///     Implementation of IAlgebrasAPIClient for communicating with Algebras translation service.
@@ -39,7 +41,24 @@ namespace Algebras.Localization.Editor.Editor.Core
                 return CreateErrorResponse("No texts provided for translation");
 
             var request = CreateTranslationRequest(texts, sourceLanguage, targetLanguage, tableSettings, options);
-            return await SendTranslationRequestAsync(request);
+            var response = await SendTranslationRequestAsync(request);
+
+            // Apply string normalization if successful
+            if (response.success && response.translations != null)
+            {
+                var finalOptions = options ?? CreateDefaultOptions(tableSettings);
+                var normalizedTranslations = StringNormalizer.NormalizeTranslations(
+                    texts,
+                    response.translations.Select(t => t.translated).ToArray(),
+                    finalOptions.normalize_strings
+                );
+
+                // Update results with normalized translations
+                for (var i = 0; i < response.translations.Length && i < normalizedTranslations.Length; i++)
+                    response.translations[i].translated = normalizedTranslations[i];
+            }
+
+            return response;
         }
 
         /// <summary>
@@ -74,7 +93,23 @@ namespace Algebras.Localization.Editor.Editor.Core
 
             var singleRequest =
                 CreateSingleTranslationRequest(text, sourceLanguage, targetLanguage, tableSettings, options);
-            return await SendSingleTranslationRequestAsync(singleRequest, text);
+            var response = await SendSingleTranslationRequestAsync(singleRequest, text);
+
+            // Apply string normalization if successful
+            if (response.success && response.translations.Length > 0)
+            {
+                var finalOptions = options ?? CreateDefaultOptions(tableSettings);
+                var normalizedTranslation = StringNormalizer.NormalizeTranslation(
+                    text,
+                    response.translations[0].translated,
+                    finalOptions.normalize_strings
+                );
+
+                // Update the response with normalized text
+                response.translations[0].translated = normalizedTranslation;
+            }
+
+            return response;
         }
 
         /// <summary>

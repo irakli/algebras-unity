@@ -1,9 +1,9 @@
 using System;
-using Algebras.Localization.Editor.Editor.ServiceProvider;
+using Algebras.Localization.Editor.ServiceProvider;
 using UnityEditor.Localization;
 using UnityEngine;
 
-namespace Algebras.Localization.Editor.Editor.Extension
+namespace Algebras.Localization.Editor.Extension
 {
     /// <summary>
     ///     Translation mode for Algebras localization operations.

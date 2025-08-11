@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Algebras.Localization.Editor.Editor.Core;
+using Algebras.Localization.Editor.Core;
 using UnityEngine;
 
-namespace Algebras.Localization.Editor.Editor.ServiceProvider
+namespace Algebras.Localization.Editor.ServiceProvider
 {
     /// <summary>
     ///     Authentication type for Algebras translation service.

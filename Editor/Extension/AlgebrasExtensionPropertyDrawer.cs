@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Algebras.Localization.Editor.Editor.Core;
+using Algebras.Localization.Editor.Core;
 using UnityEditor;
 using UnityEditor.Localization;
 using UnityEditor.Localization.Reporting;
 using UnityEngine;
 using UnityEngine.Localization.Tables;
 
-namespace Algebras.Localization.Editor.Editor.Extension
+namespace Algebras.Localization.Editor.Extension
 {
     /// <summary>
     ///     Custom property drawer for AlgebrasExtension providing simple interface.

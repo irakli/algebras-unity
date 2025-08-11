@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Algebras.Localization.Editor.Editor.Extension;
-using Algebras.Localization.Editor.Editor.ServiceProvider;
+using Algebras.Localization.Editor.Extension;
+using Algebras.Localization.Editor.ServiceProvider;
 using UnityEditor;
 using UnityEditor.Localization;
 using UnityEditor.Localization.Reporting;
 using UnityEngine;
 using UnityEngine.Localization.Tables;
 
-namespace Algebras.Localization.Editor.Editor.Core
+namespace Algebras.Localization.Editor.Core
 {
     /// <summary>
     ///     Core service for handling Algebras translation operations.

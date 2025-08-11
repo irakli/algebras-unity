@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using Algebras.Localization.Editor.Editor.Extension;
+using Algebras.Localization.Editor.Extension;
 
-namespace Algebras.Localization.Editor.Editor.Core
+namespace Algebras.Localization.Editor.Core
 {
     /// <summary>
     ///     Request model for Algebras AI batch translation API calls.

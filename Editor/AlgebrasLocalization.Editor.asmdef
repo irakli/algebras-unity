@@ -1,6 +1,6 @@
 {
   "name": "AlgebrasLocalization.Editor",
-  "rootNamespace": "Algebras.Localization.Editor",
+  "rootNamespace": "Algebras.Localization",
   "references": [
     "Unity.Localization",
     "Unity.Localization.Editor",

@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEditor.Localization;
 using UnityEngine;
 
-namespace Algebras.Localization.Editor.Editor.Extension
+namespace Algebras.Localization.Editor.Extension
 {
     /// <summary>
     ///     Custom property drawer for AlgebrasTableSettings that provides language dropdowns.

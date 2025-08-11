@@ -1,6 +1,6 @@
 using UnityEditor;
 
-namespace Algebras.Localization.Editor.Editor.ServiceProvider
+namespace Algebras.Localization.Editor.ServiceProvider
 {
     /// <summary>
     ///     Custom editor for AlgebrasServiceProvider with OpenAI warning.
