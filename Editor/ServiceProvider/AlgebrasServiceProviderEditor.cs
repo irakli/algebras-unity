@@ -1,10 +1,9 @@
-using UnityEngine;
 using UnityEditor;
 
-namespace Algebras.Localization.Editor
+namespace Algebras.Localization.Editor.Editor.ServiceProvider
 {
     /// <summary>
-    /// Custom editor for AlgebrasServiceProvider with OpenAI warning.
+    ///     Custom editor for AlgebrasServiceProvider with OpenAI warning.
     /// </summary>
     [CustomEditor(typeof(AlgebrasServiceProvider))]
     public class AlgebrasServiceProviderEditor : UnityEditor.Editor
@@ -21,18 +20,14 @@ namespace Algebras.Localization.Editor
 
             // Only show model field for OpenAI
             if (serviceProvider.Provider == AlgebrasProvider.OpenAI)
-            {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("model"));
-            }
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("applicationName"));
-            
+
             // Draw API settings (only for OpenAI)
             if (serviceProvider.Provider == AlgebrasProvider.OpenAI)
-            {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("apiSettings"));
-            }
-            
+
             EditorGUILayout.PropertyField(serializedObject.FindProperty("batchSettings"));
 
             // Show error if OpenAI is selected

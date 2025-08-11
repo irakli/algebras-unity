@@ -5,8 +5,8 @@ using UnityEngine.Localization.Metadata;
 namespace Algebras.Localization
 {
     /// <summary>
-    /// Runtime metadata for storing translation information in localization entries.
-    /// This can be attached to StringTableEntry objects to track translation details.
+    ///     Runtime metadata for storing translation information in localization entries.
+    ///     This can be attached to StringTableEntry objects to track translation details.
     /// </summary>
     [Serializable]
     [Metadata(AllowedTypes = MetadataType.StringTableEntry)]
@@ -18,43 +18,7 @@ namespace Algebras.Localization
         [SerializeField] private bool m_NeedsReview;
 
         /// <summary>
-        /// AI confidence score for this translation (0-1).
-        /// </summary>
-        public float Confidence
-        {
-            get => m_Confidence;
-            set => m_Confidence = Mathf.Clamp01(value);
-        }
-
-        /// <summary>
-        /// Name of the AI model used for translation.
-        /// </summary>
-        public string Model
-        {
-            get => m_Model;
-            set => m_Model = value ?? string.Empty;
-        }
-
-        /// <summary>
-        /// Timestamp when the translation was generated.
-        /// </summary>
-        public string Timestamp
-        {
-            get => m_Timestamp;
-            set => m_Timestamp = value ?? string.Empty;
-        }
-
-        /// <summary>
-        /// Whether this translation needs human review.
-        /// </summary>
-        public bool NeedsReview
-        {
-            get => m_NeedsReview;
-            set => m_NeedsReview = value;
-        }
-
-        /// <summary>
-        /// Creates a new instance with default values.
+        ///     Creates a new instance with default values.
         /// </summary>
         public AlgebrasTranslationMetadata()
         {
@@ -65,7 +29,7 @@ namespace Algebras.Localization
         }
 
         /// <summary>
-        /// Creates a new instance with specified values.
+        ///     Creates a new instance with specified values.
         /// </summary>
         /// <param name="confidence">Translation confidence score.</param>
         /// <param name="model">AI model used.</param>
@@ -80,7 +44,43 @@ namespace Algebras.Localization
         }
 
         /// <summary>
-        /// Updates the metadata with new translation information.
+        ///     AI confidence score for this translation (0-1).
+        /// </summary>
+        public float Confidence
+        {
+            get => m_Confidence;
+            set => m_Confidence = Mathf.Clamp01(value);
+        }
+
+        /// <summary>
+        ///     Name of the AI model used for translation.
+        /// </summary>
+        public string Model
+        {
+            get => m_Model;
+            set => m_Model = value ?? string.Empty;
+        }
+
+        /// <summary>
+        ///     Timestamp when the translation was generated.
+        /// </summary>
+        public string Timestamp
+        {
+            get => m_Timestamp;
+            set => m_Timestamp = value ?? string.Empty;
+        }
+
+        /// <summary>
+        ///     Whether this translation needs human review.
+        /// </summary>
+        public bool NeedsReview
+        {
+            get => m_NeedsReview;
+            set => m_NeedsReview = value;
+        }
+
+        /// <summary>
+        ///     Updates the metadata with new translation information.
         /// </summary>
         /// <param name="confidence">New confidence score.</param>
         /// <param name="model">AI model used.</param>
@@ -94,7 +94,7 @@ namespace Algebras.Localization
         }
 
         /// <summary>
-        /// Marks this translation as reviewed by a human.
+        ///     Marks this translation as reviewed by a human.
         /// </summary>
         public void MarkAsReviewed()
         {
@@ -102,22 +102,22 @@ namespace Algebras.Localization
         }
 
         /// <summary>
-        /// Gets a human-readable description of the translation quality.
+        ///     Gets a human-readable description of the translation quality.
         /// </summary>
         /// <returns>Quality description string.</returns>
         public string GetQualityDescription()
         {
-	        return Confidence switch
-	        {
-		        >= 0.9f => "High Quality",
-		        >= 0.7f => "Good Quality",
-		        >= 0.5f => "Medium Quality",
-		        _ => "Low Quality"
-	        };
+            return Confidence switch
+            {
+                >= 0.9f => "High Quality",
+                >= 0.7f => "Good Quality",
+                >= 0.5f => "Medium Quality",
+                _ => "Low Quality"
+            };
         }
 
         /// <summary>
-        /// Returns a string representation of this metadata.
+        ///     Returns a string representation of this metadata.
         /// </summary>
         /// <returns>String representation.</returns>
         public override string ToString()

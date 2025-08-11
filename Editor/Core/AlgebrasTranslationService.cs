@@ -1,26 +1,29 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using UnityEngine;
+using Algebras.Localization.Editor.Editor.Extension;
+using Algebras.Localization.Editor.Editor.ServiceProvider;
 using UnityEditor;
-using UnityEngine.Localization.Tables;
-using UnityEditor.Localization.Reporting;
 using UnityEditor.Localization;
+using UnityEditor.Localization.Reporting;
+using UnityEngine;
+using UnityEngine.Localization.Tables;
 
-namespace Algebras.Localization.Editor
+namespace Algebras.Localization.Editor.Editor.Core
 {
     /// <summary>
-    /// Core service for handling Algebras translation operations.
-    /// Manages the translation workflow between Unity localization tables and Algebras API.
+    ///     Core service for handling Algebras translation operations.
+    ///     Manages the translation workflow between Unity localization tables and Algebras API.
     /// </summary>
     public class AlgebrasTranslationService
     {
-        private readonly AlgebrasServiceProvider _serviceProvider;
         private readonly IAlgebrasAPIClient _apiClient;
+        private readonly AlgebrasServiceProvider _serviceProvider;
 
         /// <summary>
-        /// Initializes a new instance of AlgebrasTranslationService.
+        ///     Initializes a new instance of AlgebrasTranslationService.
         /// </summary>
         /// <param name="serviceProvider">The service provider containing configuration.</param>
         public AlgebrasTranslationService(AlgebrasServiceProvider serviceProvider)
@@ -30,7 +33,7 @@ namespace Algebras.Localization.Editor
         }
 
         /// <summary>
-        /// Pushes strings from Unity to Algebras API for translation.
+        ///     Pushes strings from Unity to Algebras API for translation.
         /// </summary>
         /// <param name="collection">The string table collection to translate.</param>
         /// <param name="extension">The Algebras extension with configuration.</param>
@@ -53,7 +56,8 @@ namespace Algebras.Localization.Editor
             if (targetLanguages == null || targetLanguages.Count == 0)
             {
                 // Check extension settings first
-                if (extension.TableSettings.TargetLanguages != null && extension.TableSettings.TargetLanguages.Length > 0)
+                if (extension.TableSettings.TargetLanguages != null &&
+                    extension.TableSettings.TargetLanguages.Length > 0)
                 {
                     targetLanguages = extension.TableSettings.TargetLanguages.ToList();
                 }
@@ -62,14 +66,12 @@ namespace Algebras.Localization.Editor
                     // Fallback: translate to all available tables except the source
                     targetLanguages = new List<string>();
                     var sourceLanguage = GetSourceLanguageFromExtension(extension, collection);
-                    
+
                     foreach (var table in collection.StringTables)
                     {
                         var tableLanguage = table.LocaleIdentifier.Code;
                         if (tableLanguage != sourceLanguage) // Skip source language
-                        {
                             targetLanguages.Add(tableLanguage);
-                        }
                     }
                 }
             }
@@ -93,10 +95,12 @@ namespace Algebras.Localization.Editor
 
                 foreach (var targetLanguage in targetLanguages)
                 {
-                    reporter?.ReportProgress($"Translating to {targetLanguage}", (float)completedOperations / totalOperations);
+                    reporter?.ReportProgress($"Translating to {targetLanguage}",
+                        (float)completedOperations / totalOperations);
 
-                    await TranslateToLanguageAsync(collection, extension, sourceTable, sourceLanguage, targetLanguage, onlyMissing, reporter);
-                    
+                    await TranslateToLanguageAsync(collection, extension, sourceTable, sourceLanguage, targetLanguage,
+                        onlyMissing, reporter);
+
                     completedOperations++;
                 }
 
@@ -110,7 +114,7 @@ namespace Algebras.Localization.Editor
         }
 
         /// <summary>
-        /// Pulls completed translations from Algebras API and updates Unity tables.
+        ///     Pulls completed translations from Algebras API and updates Unity tables.
         /// </summary>
         /// <param name="collection">The string table collection to update.</param>
         /// <param name="extension">The Algebras extension with configuration.</param>
@@ -133,7 +137,7 @@ namespace Algebras.Localization.Editor
         }
 
         /// <summary>
-        /// Tests the connection to the Algebras API.
+        ///     Tests the connection to the Algebras API.
         /// </summary>
         /// <returns>True if connection is successful, false otherwise.</returns>
         public async Task<bool> TestConnectionAsync()
@@ -152,7 +156,7 @@ namespace Algebras.Localization.Editor
         {
             // Get entries that need translation
             var entriesToTranslate = GetEntriesToTranslate(collection, sourceTable, targetLanguage, onlyMissing);
-            
+
             if (entriesToTranslate.Count == 0)
             {
                 reporter?.ReportProgress($"No entries to translate for {targetLanguage}", 0f);
@@ -164,15 +168,16 @@ namespace Algebras.Localization.Editor
             var batches = CreateBatches(entriesToTranslate, batchSize);
             var maxParallelBatches = _serviceProvider.BatchSettings.MaxParallelBatches;
 
-            var semaphore = new System.Threading.SemaphoreSlim(maxParallelBatches, maxParallelBatches);
+            var semaphore = new SemaphoreSlim(maxParallelBatches, maxParallelBatches);
             var tasks = new List<Task>();
 
-            for (int i = 0; i < batches.Count; i++)
+            for (var i = 0; i < batches.Count; i++)
             {
                 var batch = batches[i];
                 var batchIndex = i;
-                
-                var task = ProcessBatchAsync(semaphore, batch, sourceLanguage, targetLanguage, collection, extension, batchIndex, batches.Count, reporter);
+
+                var task = ProcessBatchAsync(semaphore, batch, sourceLanguage, targetLanguage, collection, extension,
+                    batchIndex, batches.Count, reporter);
                 tasks.Add(task);
             }
 
@@ -180,7 +185,7 @@ namespace Algebras.Localization.Editor
         }
 
         private async Task ProcessBatchAsync(
-            System.Threading.SemaphoreSlim semaphore,
+            SemaphoreSlim semaphore,
             List<KeyValuePair<string, string>> batch,
             string sourceLanguage,
             string targetLanguage,
@@ -191,36 +196,36 @@ namespace Algebras.Localization.Editor
             ITaskReporter reporter)
         {
             await semaphore.WaitAsync();
-            
+
             try
             {
-                reporter?.ReportProgress($"Processing batch {batchIndex + 1}/{totalBatches}", (float)batchIndex / totalBatches);
+                reporter?.ReportProgress($"Processing batch {batchIndex + 1}/{totalBatches}",
+                    (float)batchIndex / totalBatches);
 
                 var texts = batch.Select(kvp => kvp.Value).ToArray();
-                
+
                 // Convert "Auto" to "auto" for API compatibility
                 var apiSourceLanguage = sourceLanguage == "Auto" ? "auto" : sourceLanguage;
-                var response = await _apiClient.TranslateBatchAsync(texts, apiSourceLanguage, targetLanguage, extension.TableSettings);
+                var response = await _apiClient.TranslateBatchAsync(texts, apiSourceLanguage, targetLanguage,
+                    extension.TableSettings);
 
                 if (response.success && response.translations != null)
                 {
                     // Get target table
                     var targetTable = collection.GetTable(targetLanguage) as StringTable;
                     if (targetTable == null)
-                    {
                         // Create target table if it doesn't exist
                         targetTable = collection.AddNewTable(targetLanguage) as StringTable;
-                    }
 
-                    for (int i = 0; i < batch.Count && i < response.translations.Length; i++)
+                    for (var i = 0; i < batch.Count && i < response.translations.Length; i++)
                     {
                         var entry = batch[i];
                         var translation = response.translations[i];
-                        
+
                         // Update the target table with the translation
                         targetTable.AddEntry(entry.Key, translation.translated);
                     }
-                    
+
                     EditorUtility.SetDirty(targetTable);
                 }
                 else
@@ -230,9 +235,7 @@ namespace Algebras.Localization.Editor
 
                 // Respect request delay
                 if (_serviceProvider.BatchSettings.RequestDelay > 0)
-                {
                     await Task.Delay(TimeSpan.FromSeconds(_serviceProvider.BatchSettings.RequestDelay));
-                }
             }
             finally
             {
@@ -260,11 +263,8 @@ namespace Algebras.Localization.Editor
                 {
                     // Only include if missing in target table
                     var targetEntry = targetTable?.GetEntry(key);
-                    
-                    if (targetEntry?.Value == null)
-                    {
-                        entries.Add(new KeyValuePair<string, string>(key, sourceText));
-                    }
+
+                    if (targetEntry?.Value == null) entries.Add(new KeyValuePair<string, string>(key, sourceText));
                 }
                 else
                 {
@@ -276,12 +276,12 @@ namespace Algebras.Localization.Editor
         }
 
         private List<List<KeyValuePair<string, string>>> CreateBatches(
-            List<KeyValuePair<string, string>> entries, 
+            List<KeyValuePair<string, string>> entries,
             int batchSize)
         {
             var batches = new List<List<KeyValuePair<string, string>>>();
-            
-            for (int i = 0; i < entries.Count; i += batchSize)
+
+            for (var i = 0; i < entries.Count; i += batchSize)
             {
                 var batch = entries.Skip(i).Take(batchSize).ToList();
                 batches.Add(batch);
@@ -298,44 +298,34 @@ namespace Algebras.Localization.Editor
         {
             // For this simplified implementation, pull is the same as push
             // In a real implementation, this might check a translation server for completed translations
-            
+
             await Task.CompletedTask;
         }
 
         private string GetSourceLanguageFromExtension(AlgebrasExtension extension, StringTableCollection collection)
         {
             var configuredSource = extension.TableSettings.SourceLanguage;
-            
+
             // If set to "Auto" or empty, use the first table as source
             if (string.IsNullOrEmpty(configuredSource) || configuredSource == "Auto")
             {
-                if (collection.StringTables.Count > 0)
-                {
-                    return collection.StringTables[0].LocaleIdentifier.Code;
-                }
+                if (collection.StringTables.Count > 0) return collection.StringTables[0].LocaleIdentifier.Code;
                 return "en"; // Fallback to English
             }
-            
+
             return configuredSource;
         }
 
         private StringTable GetSourceTable(StringTableCollection collection, string sourceLanguage)
         {
             // If sourceLanguage is "Auto", use the first table
-            if (sourceLanguage == "Auto" && collection.StringTables.Count > 0)
-            {
-                return collection.StringTables[0];
-            }
-            
+            if (sourceLanguage == "Auto" && collection.StringTables.Count > 0) return collection.StringTables[0];
+
             // Find table matching the source language
             foreach (var table in collection.StringTables)
-            {
                 if (table.LocaleIdentifier.Code == sourceLanguage)
-                {
                     return table;
-                }
-            }
-            
+
             // Fallback to first table if no match found
             return collection.StringTables.Count > 0 ? collection.StringTables[0] : null;
         }

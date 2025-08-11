@@ -1,20 +1,20 @@
 {
-    "name": "AlgebrasLocalization.Editor",
-    "rootNamespace": "Algebras.Localization.Editor",
-    "references": [
-        "Unity.Localization",
-        "Unity.Localization.Editor",
-        "AlgebrasLocalization.Runtime"
-    ],
-    "includePlatforms": [
-        "Editor"
-    ],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+  "name": "AlgebrasLocalization.Editor",
+  "rootNamespace": "Algebras.Localization.Editor",
+  "references": [
+    "Unity.Localization",
+    "Unity.Localization.Editor",
+    "AlgebrasLocalization.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
 }

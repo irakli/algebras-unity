@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using UnityEngine;
+using Algebras.Localization.Editor.Editor.Core;
 using UnityEditor;
-using UnityEditor.Localization.Reporting;
-using UnityEngine.Localization.Tables;
 using UnityEditor.Localization;
+using UnityEditor.Localization.Reporting;
+using UnityEngine;
+using UnityEngine.Localization.Tables;
 
-namespace Algebras.Localization.Editor
+namespace Algebras.Localization.Editor.Editor.Extension
 {
     /// <summary>
-    /// Custom property drawer for AlgebrasExtension providing simple interface.
+    ///     Custom property drawer for AlgebrasExtension providing simple interface.
     /// </summary>
     [CustomPropertyDrawer(typeof(AlgebrasExtension))]
     public class AlgebrasExtensionPropertyDrawer : PropertyDrawer
@@ -45,7 +46,8 @@ namespace Algebras.Localization.Editor
             // Validation warning
             if (serviceProviderProp.objectReferenceValue == null)
             {
-                EditorGUI.HelpBox(rect, "Service Provider is required for translation operations.", MessageType.Warning);
+                EditorGUI.HelpBox(rect, "Service Provider is required for translation operations.",
+                    MessageType.Warning);
                 rect.y += EditorGUIUtility.singleLineHeight + k_Spacing;
             }
             else if (extension?.ServiceProvider != null && !extension.ServiceProvider.IsConfigurationValid())
@@ -69,7 +71,7 @@ namespace Algebras.Localization.Editor
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            float height = 0f;
+            var height = 0f;
 
             // Header
             height += EditorGUIUtility.singleLineHeight + k_SectionSpacing;
@@ -93,7 +95,8 @@ namespace Algebras.Localization.Editor
             {
                 var errors = extension.ServiceProvider.GetValidationErrors();
                 var errorMessage = string.Join("\n", errors);
-                height += EditorStyles.helpBox.CalcHeight(new GUIContent(errorMessage), EditorGUIUtility.currentViewWidth) + k_Spacing;
+                height += EditorStyles.helpBox.CalcHeight(new GUIContent(errorMessage),
+                    EditorGUIUtility.currentViewWidth) + k_Spacing;
             }
 
             // Spacing before buttons
@@ -104,13 +107,12 @@ namespace Algebras.Localization.Editor
             height += EditorGUIUtility.singleLineHeight + k_Spacing; // Mode label
             height += EditorGUIUtility.singleLineHeight + k_Spacing; // Mode dropdown
             height += EditorGUIUtility.singleLineHeight * 2 + k_Spacing; // Explanation (estimated)
-            
+
             // Check if we need to show glossary warning
-            if (extension?.TableSettings?.TranslationMode == TranslationMode.Batch && !string.IsNullOrEmpty(extension?.TableSettings?.GlossaryId))
-            {
+            if (extension?.TableSettings?.TranslationMode == TranslationMode.Batch &&
+                !string.IsNullOrEmpty(extension?.TableSettings?.GlossaryId))
                 height += EditorGUIUtility.singleLineHeight + k_Spacing; // Warning message
-            }
-            
+
             height += k_Spacing; // Extra spacing before button
             height += k_ButtonHeight; // Translate button
 
@@ -123,26 +125,30 @@ namespace Algebras.Localization.Editor
 
             // Translation Mode Selection
             var modeRect = new Rect(currentRect.x, currentRect.y, currentRect.width, EditorGUIUtility.singleLineHeight);
-            
+
             EditorGUI.LabelField(modeRect, "Translation Mode", EditorStyles.boldLabel);
             currentRect.y += EditorGUIUtility.singleLineHeight + k_Spacing;
 
             // Mode dropdown
-            var modeDropdownRect = new Rect(currentRect.x, currentRect.y, currentRect.width, EditorGUIUtility.singleLineHeight);
-            var newMode = (TranslationMode)EditorGUI.EnumPopup(modeDropdownRect, extension?.TableSettings?.TranslationMode ?? TranslationMode.Batch);
+            var modeDropdownRect = new Rect(currentRect.x, currentRect.y, currentRect.width,
+                EditorGUIUtility.singleLineHeight);
+            var newMode = (TranslationMode)EditorGUI.EnumPopup(modeDropdownRect,
+                extension?.TableSettings?.TranslationMode ?? TranslationMode.Batch);
             if (extension?.TableSettings != null && newMode != extension.TableSettings.TranslationMode)
             {
                 extension.TableSettings.TranslationMode = newMode;
                 EditorUtility.SetDirty(extension.TargetCollection);
             }
+
             currentRect.y += EditorGUIUtility.singleLineHeight + k_Spacing;
 
             // Mode explanation
-            var explanationRect = new Rect(currentRect.x, currentRect.y, currentRect.width, EditorGUIUtility.singleLineHeight * 2);
-            string explanation = newMode == TranslationMode.Single 
+            var explanationRect = new Rect(currentRect.x, currentRect.y, currentRect.width,
+                EditorGUIUtility.singleLineHeight * 2);
+            var explanation = newMode == TranslationMode.Single
                 ? "Single Mode: Individual translations with glossary support. Slower but more accurate for terminology."
                 : "Batch Mode: Bulk translations with parallel processing. Faster but no glossary support.";
-            
+
             var helpBoxHeight = EditorStyles.helpBox.CalcHeight(new GUIContent(explanation), currentRect.width);
             explanationRect.height = helpBoxHeight;
             EditorGUI.HelpBox(explanationRect, explanation, MessageType.Info);
@@ -151,10 +157,14 @@ namespace Algebras.Localization.Editor
             // Glossary warning for batch mode
             if (newMode == TranslationMode.Batch && !string.IsNullOrEmpty(extension?.TableSettings?.GlossaryId))
             {
-                var warningRect = new Rect(currentRect.x, currentRect.y, currentRect.width, EditorGUIUtility.singleLineHeight);
-                var warningHeight = EditorStyles.helpBox.CalcHeight(new GUIContent("Warning: Glossary is configured but not supported in Batch mode."), currentRect.width);
+                var warningRect = new Rect(currentRect.x, currentRect.y, currentRect.width,
+                    EditorGUIUtility.singleLineHeight);
+                var warningHeight = EditorStyles.helpBox.CalcHeight(
+                    new GUIContent("Warning: Glossary is configured but not supported in Batch mode."),
+                    currentRect.width);
                 warningRect.height = warningHeight;
-                EditorGUI.HelpBox(warningRect, "Warning: Glossary is configured but not supported in Batch mode.", MessageType.Warning);
+                EditorGUI.HelpBox(warningRect, "Warning: Glossary is configured but not supported in Batch mode.",
+                    MessageType.Warning);
                 currentRect.y += warningHeight + k_Spacing;
             }
 
@@ -163,16 +173,13 @@ namespace Algebras.Localization.Editor
 
             // Translate button with mode-specific label
             var translateRect = new Rect(currentRect.x, currentRect.y, currentRect.width, k_ButtonHeight);
-            string buttonText = newMode == TranslationMode.Single ? "Translate (Single Mode)" : "Translate (Batch Mode)";
+            var buttonText = newMode == TranslationMode.Single ? "Translate (Single Mode)" : "Translate (Batch Mode)";
 
-            bool canTranslate = extension?.ServiceProvider != null && extension.ServiceProvider.IsConfigurationValid();
+            var canTranslate = extension?.ServiceProvider != null && extension.ServiceProvider.IsConfigurationValid();
 
             GUI.enabled = canTranslate;
 
-            if (GUI.Button(translateRect, buttonText))
-            {
-                PerformTranslateOperation(extension);
-            }
+            if (GUI.Button(translateRect, buttonText)) PerformTranslateOperation(extension);
 
             GUI.enabled = true;
         }
@@ -184,13 +191,9 @@ namespace Algebras.Localization.Editor
 
             // If it's a StringTableCollection, look for the extension
             if (target is StringTableCollection collection)
-            {
                 foreach (var ext in collection.Extensions)
-                {
                     if (ext is AlgebrasExtension algebrasExt)
                         return algebrasExt;
-                }
-            }
 
             return null;
         }
@@ -207,13 +210,9 @@ namespace Algebras.Localization.Editor
             try
             {
                 if (mode == TranslationMode.Single)
-                {
                     await PerformSingleModeTranslation(extension, collection);
-                }
                 else
-                {
                     await PerformBatchModeTranslation(extension, collection);
-                }
 
                 EditorUtility.SetDirty(collection);
                 Debug.Log($"Translation completed successfully using {mode} mode.");
@@ -238,13 +237,13 @@ namespace Algebras.Localization.Editor
         {
             var apiClient = extension.ServiceProvider.Client;
             var reporter = new SimpleTaskReporter();
-            
+
             reporter.Start("Single Mode Translation", "Preparing translation...");
 
             // Determine the actual source language and get source table
             var configuredSourceLang = extension.TableSettings.SourceLanguage;
             StringTable sourceTable = null;
-            
+
             // If source language is "Auto" or empty, use first table as source
             if (string.IsNullOrEmpty(configuredSourceLang) || configuredSourceLang == "Auto")
             {
@@ -256,10 +255,8 @@ namespace Algebras.Localization.Editor
                 // Find the configured source table
                 sourceTable = collection.GetTable(configuredSourceLang) as StringTable;
                 if (sourceTable == null)
-                {
                     // Fallback to first table if configured source not found
                     sourceTable = collection.StringTables.Count > 0 ? collection.StringTables[0] : null;
-                }
             }
 
             if (sourceTable == null)
@@ -272,7 +269,7 @@ namespace Algebras.Localization.Editor
 
             // Get all missing entries that need translation
             var missingEntries = new List<(string key, string sourceText, string targetLanguage)>();
-            
+
             foreach (var table in collection.StringTables)
             {
                 // Skip the source table itself
@@ -284,10 +281,10 @@ namespace Algebras.Localization.Editor
                 foreach (var entry in collection.SharedData.Entries)
                 {
                     var sourceEntry = sourceTable.GetEntry(entry.Id);
-                    var targetTable = table as StringTable;
+                    var targetTable = table;
                     var targetEntry = targetTable?.GetEntry(entry.Id);
-                    
-                    if (sourceEntry != null && !string.IsNullOrEmpty(sourceEntry.Value) && 
+
+                    if (sourceEntry != null && !string.IsNullOrEmpty(sourceEntry.Value) &&
                         (targetEntry == null || string.IsNullOrEmpty(targetEntry.Value)))
                     {
                         missingEntries.Add((entry.Key, sourceEntry.Value, table.LocaleIdentifier.Code));
@@ -305,29 +302,32 @@ namespace Algebras.Localization.Editor
             reporter.ReportProgress($"Translating {missingEntries.Count} entries...", 0f);
 
             // Translate each entry individually using single mode
-            for (int i = 0; i < missingEntries.Count; i++)
+            for (var i = 0; i < missingEntries.Count; i++)
             {
                 var (key, sourceText, targetLang) = missingEntries[i];
-                
+
                 try
                 {
                     var response = await apiClient.TranslateSingleAsync(
-                        sourceText, 
-                        extension.TableSettings.SourceLanguage == "Auto" ? "auto" : extension.TableSettings.SourceLanguage.ToLower(),
-                        targetLang, 
+                        sourceText,
+                        extension.TableSettings.SourceLanguage == "Auto"
+                            ? "auto"
+                            : extension.TableSettings.SourceLanguage.ToLower(),
+                        targetLang,
                         extension.TableSettings);
 
                     if (response.success && response.translations.Length > 0)
                     {
                         var translatedText = response.translations[0].translated;
-                        
+
                         // Find the target table and update the entry
                         var targetTable = collection.GetTable(targetLang) as StringTable;
                         if (targetTable != null)
                         {
                             targetTable.AddEntry(key, translatedText);
-                            
-                            Debug.Log($"[Single Mode] Translated '{sourceText}' -> '{translatedText}' (key: {key}, lang: {targetLang})");
+
+                            Debug.Log(
+                                $"[Single Mode] Translated '{sourceText}' -> '{translatedText}' (key: {key}, lang: {targetLang})");
                         }
                     }
                     else
@@ -341,25 +341,23 @@ namespace Algebras.Localization.Editor
                 }
 
                 // Update progress
-                float progress = (float)(i + 1) / missingEntries.Count;
+                var progress = (float)(i + 1) / missingEntries.Count;
                 reporter.ReportProgress($"Translated {i + 1}/{missingEntries.Count} entries", progress);
             }
 
             reporter.Completed($"Single mode translation completed for {missingEntries.Count} entries.");
         }
-
-
     }
 
     /// <summary>
-    /// Simple task reporter for translation operations.
+    ///     Simple task reporter for translation operations.
     /// </summary>
     public class SimpleTaskReporter : ITaskReporter
     {
-        public bool Started { get; private set; }
-        public float CurrentProgress { get; private set; }
         public string Description { get; private set; }
         public string Status { get; private set; }
+        public bool Started { get; private set; }
+        public float CurrentProgress { get; private set; }
 
         public void Start(string description, string initialStatus)
         {

@@ -1,11 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
+using Algebras.Localization.Editor.Editor.Extension;
 
-namespace Algebras.Localization.Editor
+namespace Algebras.Localization.Editor.Editor.Core
 {
     /// <summary>
-    /// Request model for Algebras AI batch translation API calls.
+    ///     Request model for Algebras AI batch translation API calls.
     /// </summary>
     [Serializable]
     public class AlgebrasBatchRequest
@@ -14,12 +14,12 @@ namespace Algebras.Localization.Editor
         public string sourceLanguage;
         public string targetLanguage;
         public string prompt = "";
-        public bool flag = false; // ui_safe mode
+        public bool flag; // ui_safe mode
     }
 
     /// <summary>
-    /// Request model for Algebras AI single translation API calls.
-    /// Uses multipart/form-data format.
+    ///     Request model for Algebras AI single translation API calls.
+    ///     Uses multipart/form-data format.
     /// </summary>
     [Serializable]
     public class AlgebrasSingleRequest
@@ -34,7 +34,7 @@ namespace Algebras.Localization.Editor
     }
 
     /// <summary>
-    /// Legacy request model for backwards compatibility.
+    ///     Legacy request model for backwards compatibility.
     /// </summary>
     [Serializable]
     public class TranslationRequest
@@ -57,7 +57,7 @@ namespace Algebras.Localization.Editor
     }
 
     /// <summary>
-    /// Response model for Algebras AI batch translation API calls.
+    ///     Response model for Algebras AI batch translation API calls.
     /// </summary>
     [Serializable]
     public class AlgebrasBatchResponse
@@ -81,7 +81,7 @@ namespace Algebras.Localization.Editor
     }
 
     /// <summary>
-    /// Response model for Algebras AI single translation API calls.
+    ///     Response model for Algebras AI single translation API calls.
     /// </summary>
     [Serializable]
     public class AlgebrasSingleResponse
@@ -92,7 +92,7 @@ namespace Algebras.Localization.Editor
     }
 
     /// <summary>
-    /// Legacy response model for backwards compatibility.
+    ///     Legacy response model for backwards compatibility.
     /// </summary>
     [Serializable]
     public class TranslationResponse
@@ -113,12 +113,12 @@ namespace Algebras.Localization.Editor
     }
 
     /// <summary>
-    /// Interface for Algebras translation API client.
+    ///     Interface for Algebras translation API client.
     /// </summary>
     public interface IAlgebrasAPIClient
     {
         /// <summary>
-        /// Translates a batch of texts from source to target language.
+        ///     Translates a batch of texts from source to target language.
         /// </summary>
         /// <param name="texts">Array of texts to translate.</param>
         /// <param name="sourceLanguage">Source language code.</param>
@@ -127,15 +127,15 @@ namespace Algebras.Localization.Editor
         /// <param name="options">Translation options.</param>
         /// <returns>Translation response containing results.</returns>
         Task<TranslationResponse> TranslateBatchAsync(
-            string[] texts, 
-            string sourceLanguage, 
-            string targetLanguage, 
+            string[] texts,
+            string sourceLanguage,
+            string targetLanguage,
             AlgebrasTableSettings tableSettings,
             TranslationRequest.TranslationOptions options = null);
 
         /// <summary>
-        /// Translates a single text from source to target language.
-        /// Currently routes through batch API for consistency.
+        ///     Translates a single text from source to target language.
+        ///     Currently routes through batch API for consistency.
         /// </summary>
         /// <param name="text">Text to translate.</param>
         /// <param name="sourceLanguage">Source language code.</param>
@@ -144,15 +144,15 @@ namespace Algebras.Localization.Editor
         /// <param name="options">Translation options.</param>
         /// <returns>Translation response containing result.</returns>
         Task<TranslationResponse> TranslateAsync(
-            string text, 
-            string sourceLanguage, 
-            string targetLanguage, 
+            string text,
+            string sourceLanguage,
+            string targetLanguage,
             AlgebrasTableSettings tableSettings,
             TranslationRequest.TranslationOptions options = null);
 
         /// <summary>
-        /// Translates a single text using the true single mode API endpoint.
-        /// This method supports glossary and uses multipart/form-data format.
+        ///     Translates a single text using the true single mode API endpoint.
+        ///     This method supports glossary and uses multipart/form-data format.
         /// </summary>
         /// <param name="text">Text to translate.</param>
         /// <param name="sourceLanguage">Source language code.</param>
@@ -161,20 +161,20 @@ namespace Algebras.Localization.Editor
         /// <param name="options">Translation options.</param>
         /// <returns>Translation response containing result.</returns>
         Task<TranslationResponse> TranslateSingleAsync(
-            string text, 
-            string sourceLanguage, 
-            string targetLanguage, 
+            string text,
+            string sourceLanguage,
+            string targetLanguage,
             AlgebrasTableSettings tableSettings,
             TranslationRequest.TranslationOptions options = null);
 
         /// <summary>
-        /// Tests the connection to the translation service.
+        ///     Tests the connection to the translation service.
         /// </summary>
         /// <returns>True if connection is successful, false otherwise.</returns>
         Task<bool> TestConnectionAsync();
 
         /// <summary>
-        /// Gets information about available models (for OpenAI provider).
+        ///     Gets information about available models (for OpenAI provider).
         /// </summary>
         /// <returns>Array of available model names.</returns>
         Task<string[]> GetAvailableModelsAsync();

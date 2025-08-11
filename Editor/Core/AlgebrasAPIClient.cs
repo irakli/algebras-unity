@@ -2,20 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Algebras.Localization.Editor.Editor.Extension;
+using Algebras.Localization.Editor.Editor.ServiceProvider;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Algebras.Localization.Editor
+namespace Algebras.Localization.Editor.Editor.Core
 {
     /// <summary>
-    /// Implementation of IAlgebrasAPIClient for communicating with Algebras translation service.
+    ///     Implementation of IAlgebrasAPIClient for communicating with Algebras translation service.
     /// </summary>
     public class AlgebrasAPIClient : IAlgebrasAPIClient
     {
         private readonly AlgebrasServiceProvider _serviceProvider;
 
         /// <summary>
-        /// Initializes a new instance of AlgebrasAPIClient.
+        ///     Initializes a new instance of AlgebrasAPIClient.
         /// </summary>
         /// <param name="serviceProvider">The service provider containing configuration.</param>
         public AlgebrasAPIClient(AlgebrasServiceProvider serviceProvider)
@@ -24,7 +26,7 @@ namespace Algebras.Localization.Editor
         }
 
         /// <summary>
-        /// Translates a batch of texts from source to target language.
+        ///     Translates a batch of texts from source to target language.
         /// </summary>
         public async Task<TranslationResponse> TranslateBatchAsync(
             string[] texts,
@@ -41,8 +43,8 @@ namespace Algebras.Localization.Editor
         }
 
         /// <summary>
-        /// Translates a single text from source to target language.
-        /// Currently routes through batch API for backward compatibility.
+        ///     Translates a single text from source to target language.
+        ///     Currently routes through batch API for backward compatibility.
         /// </summary>
         public async Task<TranslationResponse> TranslateAsync(
             string text,
@@ -58,7 +60,7 @@ namespace Algebras.Localization.Editor
         }
 
         /// <summary>
-        /// Translates a single text using the true single mode API endpoint with glossary support.
+        ///     Translates a single text using the true single mode API endpoint with glossary support.
         /// </summary>
         public async Task<TranslationResponse> TranslateSingleAsync(
             string text,
@@ -70,12 +72,13 @@ namespace Algebras.Localization.Editor
             if (string.IsNullOrEmpty(text))
                 return CreateErrorResponse("No text provided for translation");
 
-            var singleRequest = CreateSingleTranslationRequest(text, sourceLanguage, targetLanguage, tableSettings, options);
+            var singleRequest =
+                CreateSingleTranslationRequest(text, sourceLanguage, targetLanguage, tableSettings, options);
             return await SendSingleTranslationRequestAsync(singleRequest, text);
         }
 
         /// <summary>
-        /// Tests the connection to the translation service.
+        ///     Tests the connection to the translation service.
         /// </summary>
         public async Task<bool> TestConnectionAsync()
         {
@@ -94,7 +97,7 @@ namespace Algebras.Localization.Editor
         }
 
         /// <summary>
-        /// Gets information about available models.
+        ///     Gets information about available models.
         /// </summary>
         public async Task<string[]> GetAvailableModelsAsync()
         {
@@ -142,7 +145,7 @@ namespace Algebras.Localization.Editor
             TranslationRequest.TranslationOptions options)
         {
             var finalOptions = options ?? CreateDefaultOptions(tableSettings);
-            
+
             return new AlgebrasSingleRequest
             {
                 sourceLanguage = sourceLanguage,
@@ -155,14 +158,14 @@ namespace Algebras.Localization.Editor
             };
         }
 
-        private async Task<TranslationResponse> SendSingleTranslationRequestAsync(AlgebrasSingleRequest request, string originalText)
+        private async Task<TranslationResponse> SendSingleTranslationRequestAsync(AlgebrasSingleRequest request,
+            string originalText)
         {
             try
             {
                 if (_serviceProvider.Provider == AlgebrasProvider.OpenAI)
-                {
-                    return CreateErrorResponse("OpenAI provider is not yet implemented. Please use Algebras AI provider.");
-                }
+                    return CreateErrorResponse(
+                        "OpenAI provider is not yet implemented. Please use Algebras AI provider.");
 
                 var endpoint = GetSingleTranslationEndpoint();
 
@@ -179,33 +182,34 @@ namespace Algebras.Localization.Editor
 
                     // Create multipart form data with explicit null checks
                     var formData = new List<IMultipartFormSection>();
-                    
+
                     // Add required fields with safety checks
                     if (!string.IsNullOrEmpty(request.sourceLanguage))
                         formData.Add(new MultipartFormDataSection("sourceLanguage", request.sourceLanguage));
-                    
+
                     if (!string.IsNullOrEmpty(request.targetLanguage))
                         formData.Add(new MultipartFormDataSection("targetLanguage", request.targetLanguage));
-                        
+
                     if (!string.IsNullOrEmpty(request.textContent))
                         formData.Add(new MultipartFormDataSection("textContent", request.textContent));
-                    
+
                     // Optional fields - only add if not null/empty
                     if (!string.IsNullOrEmpty(request.fileContent))
                         formData.Add(new MultipartFormDataSection("fileContent", request.fileContent));
-                    
+
                     if (!string.IsNullOrEmpty(request.prompt))
                         formData.Add(new MultipartFormDataSection("prompt", request.prompt));
-                        
+
                     if (!string.IsNullOrEmpty(request.flag))
                         formData.Add(new MultipartFormDataSection("flag", request.flag));
-                    
+
                     if (!string.IsNullOrEmpty(request.glossaryId))
                         formData.Add(new MultipartFormDataSection("glossaryId", request.glossaryId));
 
                     Debug.Log($"[Single API] Created {formData.Count} form sections");
 
-                    webRequest.uploadHandler = new UploadHandlerRaw(UnityWebRequest.SerializeFormSections(formData, Encoding.UTF8.GetBytes("----boundary----")));
+                    webRequest.uploadHandler = new UploadHandlerRaw(
+                        UnityWebRequest.SerializeFormSections(formData, Encoding.UTF8.GetBytes("----boundary----")));
                     webRequest.downloadHandler = new DownloadHandlerBuffer();
 
                     // Set headers for multipart/form-data
@@ -217,10 +221,7 @@ namespace Algebras.Localization.Editor
                     var operation = webRequest.SendWebRequest();
 
                     // Wait for completion
-                    while (!operation.isDone)
-                    {
-                        await Task.Yield();
-                    }
+                    while (!operation.isDone) await Task.Yield();
 
                     // Handle response
                     if (webRequest.result == UnityWebRequest.Result.Success)
@@ -245,16 +246,11 @@ namespace Algebras.Localization.Editor
                             }
                         };
                     }
-                    else
-                    {
-                        var error = $"HTTP {webRequest.responseCode}: {webRequest.error}";
-                        if (webRequest.downloadHandler != null)
-                        {
-                            error += $"\nResponse: {webRequest.downloadHandler.text}";
-                        }
-                        Debug.LogError($"Algebras Single API request failed: {error}");
-                        return CreateErrorResponse(error);
-                    }
+
+                    var error = $"HTTP {webRequest.responseCode}: {webRequest.error}";
+                    if (webRequest.downloadHandler != null) error += $"\nResponse: {webRequest.downloadHandler.text}";
+                    Debug.LogError($"Algebras Single API request failed: {error}");
+                    return CreateErrorResponse(error);
                 }
             }
             catch (Exception ex)
@@ -269,9 +265,8 @@ namespace Algebras.Localization.Editor
             try
             {
                 if (_serviceProvider.Provider == AlgebrasProvider.OpenAI)
-                {
-                    return CreateErrorResponse("OpenAI provider is not yet implemented. Please use Algebras AI provider.");
-                }
+                    return CreateErrorResponse(
+                        "OpenAI provider is not yet implemented. Please use Algebras AI provider.");
                 // Convert to Algebras AI batch request format
                 var batchRequest = new AlgebrasBatchRequest
                 {
@@ -288,7 +283,7 @@ namespace Algebras.Localization.Editor
                 using (var webRequest = new UnityWebRequest(endpoint, "POST"))
                 {
                     // Set request body
-                    byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
+                    var bodyRaw = Encoding.UTF8.GetBytes(json);
                     webRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
                     webRequest.downloadHandler = new DownloadHandlerBuffer();
 
@@ -301,10 +296,7 @@ namespace Algebras.Localization.Editor
                     var operation = webRequest.SendWebRequest();
 
                     // Wait for completion
-                    while (!operation.isDone)
-                    {
-                        await Task.Yield();
-                    }
+                    while (!operation.isDone) await Task.Yield();
 
                     // Handle response
                     if (webRequest.result == UnityWebRequest.Result.Success)
@@ -324,39 +316,33 @@ namespace Algebras.Localization.Editor
                         if (batchResponse.data?.translations != null)
                         {
                             // Sort by index and convert to legacy format
-                            var sortedTranslations = new AlgebrasBatchResponse.AlgebrasTranslation[batchResponse.data.translations.Length];
-                            for (int i = 0; i < batchResponse.data.translations.Length; i++)
+                            var sortedTranslations =
+                                new AlgebrasBatchResponse.AlgebrasTranslation[batchResponse.data.translations.Length];
+                            for (var i = 0; i < batchResponse.data.translations.Length; i++)
                             {
                                 var translation = batchResponse.data.translations[i];
                                 if (translation.index < sortedTranslations.Length)
-                                {
                                     sortedTranslations[translation.index] = translation;
-                                }
                             }
 
-                            for (int i = 0; i < legacyResponse.translations.Length && i < sortedTranslations.Length; i++)
-                            {
+                            for (var i = 0;
+                                 i < legacyResponse.translations.Length && i < sortedTranslations.Length;
+                                 i++)
                                 legacyResponse.translations[i] = new TranslationResponse.TranslationResult
                                 {
                                     original = i < request.texts.Length ? request.texts[i] : "",
                                     translated = sortedTranslations[i]?.content ?? "",
                                     confidence = 1.0f // Algebras AI doesn't return confidence in batch mode
                                 };
-                            }
                         }
 
                         return legacyResponse;
                     }
-                    else
-                    {
-                        var error = $"HTTP {webRequest.responseCode}: {webRequest.error}";
-                        if (webRequest.downloadHandler != null)
-                        {
-                            error += $"\nResponse: {webRequest.downloadHandler.text}";
-                        }
-                        Debug.LogError($"Algebras API request failed: {error}");
-                        return CreateErrorResponse(error);
-                    }
+
+                    var error = $"HTTP {webRequest.responseCode}: {webRequest.error}";
+                    if (webRequest.downloadHandler != null) error += $"\nResponse: {webRequest.downloadHandler.text}";
+                    Debug.LogError($"Algebras API request failed: {error}");
+                    return CreateErrorResponse(error);
                 }
             }
             catch (Exception ex)
