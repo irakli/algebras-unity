@@ -54,8 +54,10 @@ namespace Algebras.Localization.Editor.Core
                 );
 
                 // Update results with normalized translations
-                for (var i = 0; i < response.translations.Length && i < normalizedTranslations.Length; i++)
+                for (int i = 0; i < response.translations.Length && i < normalizedTranslations.Length; i++)
+                {
                     response.translations[i].translated = normalizedTranslations[i];
+                }
             }
 
             return response;
@@ -399,13 +401,7 @@ namespace Algebras.Localization.Editor.Core
 
         private void SetAuthenticationHeaders(UnityWebRequest webRequest)
         {
-            switch (_serviceProvider.Authentication)
-            {
-                case AlgebrasAuthenticationType.ApiKey:
-                    webRequest.SetRequestHeader("X-Api-Key", _serviceProvider.ApiKey);
-                    break;
-            }
-
+            webRequest.SetRequestHeader("X-Api-Key", _serviceProvider.ApiKey);
             webRequest.SetRequestHeader("User-Agent", $"{_serviceProvider.ApplicationName}/1.0.0");
         }
 

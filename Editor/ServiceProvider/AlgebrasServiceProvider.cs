@@ -6,22 +6,6 @@ using UnityEngine;
 namespace Algebras.Localization.Editor.ServiceProvider
 {
     /// <summary>
-    ///     Authentication type for Algebras translation service.
-    /// </summary>
-    public enum AlgebrasAuthenticationType
-    {
-        /// <summary>
-        ///     No authentication specified.
-        /// </summary>
-        None,
-
-        /// <summary>
-        ///     Use API key authentication.
-        /// </summary>
-        ApiKey
-    }
-
-    /// <summary>
     ///     Translation provider options.
     /// </summary>
     public enum AlgebrasProvider
@@ -143,9 +127,6 @@ namespace Algebras.Localization.Editor.ServiceProvider
         [SerializeField] [Tooltip("Your Algebras AI API key. Get one from https://platform.algebras.ai")]
         private string apiKey = string.Empty;
 
-        [SerializeField] [Tooltip("Authentication method to use with the API")]
-        private AlgebrasAuthenticationType authenticationType = AlgebrasAuthenticationType.ApiKey;
-
         [SerializeField] [Tooltip("Translation provider: Algebras AI (recommended) or OpenAI (coming soon)")]
         private AlgebrasProvider provider = AlgebrasProvider.AlgebrasAI;
 
@@ -159,15 +140,6 @@ namespace Algebras.Localization.Editor.ServiceProvider
         [SerializeField] private AlgebrasBatchSettings batchSettings = new();
 
         private IAlgebrasAPIClient _client;
-
-        /// <summary>
-        ///     The authentication methodology to use.
-        /// </summary>
-        public AlgebrasAuthenticationType Authentication
-        {
-            get => authenticationType;
-            set => authenticationType = value;
-        }
 
         /// <summary>
         ///     The translation provider to use.
@@ -258,12 +230,7 @@ namespace Algebras.Localization.Editor.ServiceProvider
         /// <returns>True if configuration is valid, false otherwise.</returns>
         public bool IsConfigurationValid()
         {
-            if (authenticationType == AlgebrasAuthenticationType.ApiKey)
-                if (string.IsNullOrWhiteSpace(apiKey))
-                    return false;
-
-
-            return true;
+            return !string.IsNullOrWhiteSpace(apiKey);
         }
 
         /// <summary>
@@ -274,7 +241,7 @@ namespace Algebras.Localization.Editor.ServiceProvider
         {
             var errors = new List<string>();
 
-            if (authenticationType == AlgebrasAuthenticationType.ApiKey && string.IsNullOrWhiteSpace(apiKey))
+            if (string.IsNullOrWhiteSpace(apiKey))
                 errors.Add("API Key is required when using API Key authentication.");
 
             if (provider == AlgebrasProvider.OpenAI)

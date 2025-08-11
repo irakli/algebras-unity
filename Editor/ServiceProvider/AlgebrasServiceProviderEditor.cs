@@ -15,7 +15,6 @@ namespace Algebras.Localization.Editor.ServiceProvider
 
             // Draw properties manually to control visibility
             EditorGUILayout.PropertyField(serializedObject.FindProperty("apiKey"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("authenticationType"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("provider"));
 
             // Only show model field for OpenAI
