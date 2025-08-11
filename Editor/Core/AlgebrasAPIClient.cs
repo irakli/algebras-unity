@@ -42,6 +42,7 @@ namespace Algebras.Localization.Editor
 
         /// <summary>
         /// Translates a single text from source to target language.
+        /// Currently routes through batch API for backward compatibility.
         /// </summary>
         public async Task<TranslationResponse> TranslateAsync(
             string text,
@@ -57,6 +58,23 @@ namespace Algebras.Localization.Editor
         }
 
         /// <summary>
+        /// Translates a single text using the true single mode API endpoint with glossary support.
+        /// </summary>
+        public async Task<TranslationResponse> TranslateSingleAsync(
+            string text,
+            string sourceLanguage,
+            string targetLanguage,
+            AlgebrasTableSettings tableSettings,
+            TranslationRequest.TranslationOptions options = null)
+        {
+            if (string.IsNullOrEmpty(text))
+                return CreateErrorResponse("No text provided for translation");
+
+            var singleRequest = CreateSingleTranslationRequest(text, sourceLanguage, targetLanguage, tableSettings, options);
+            return await SendSingleTranslationRequestAsync(singleRequest, text);
+        }
+
+        /// <summary>
         /// Tests the connection to the translation service.
         /// </summary>
         public async Task<bool> TestConnectionAsync()
@@ -64,7 +82,8 @@ namespace Algebras.Localization.Editor
             try
             {
                 var defaultSettings = new AlgebrasTableSettings();
-                var testResponse = await TranslateAsync("test", "en", "es", defaultSettings);
+                // Test using single mode API to verify new endpoint works
+                var testResponse = await TranslateSingleAsync("test", "en", "es", defaultSettings);
                 return testResponse.success;
             }
             catch (Exception ex)
@@ -113,6 +132,136 @@ namespace Algebras.Localization.Editor
                 temperature = apiSettings.Temperature,
                 max_tokens = apiSettings.MaxTokens
             };
+        }
+
+        private AlgebrasSingleRequest CreateSingleTranslationRequest(
+            string text,
+            string sourceLanguage,
+            string targetLanguage,
+            AlgebrasTableSettings tableSettings,
+            TranslationRequest.TranslationOptions options)
+        {
+            var finalOptions = options ?? CreateDefaultOptions(tableSettings);
+            
+            return new AlgebrasSingleRequest
+            {
+                sourceLanguage = sourceLanguage,
+                targetLanguage = targetLanguage,
+                textContent = text,
+                fileContent = "", // Always empty for text-only translations
+                glossaryId = finalOptions.glossary_id ?? "",
+                prompt = finalOptions.custom_prompt ?? "",
+                flag = finalOptions.ui_safe ? "true" : "false" // Convert bool to string for single mode
+            };
+        }
+
+        private async Task<TranslationResponse> SendSingleTranslationRequestAsync(AlgebrasSingleRequest request, string originalText)
+        {
+            try
+            {
+                if (_serviceProvider.Provider == AlgebrasProvider.OpenAI)
+                {
+                    return CreateErrorResponse("OpenAI provider is not yet implemented. Please use Algebras AI provider.");
+                }
+
+                var endpoint = GetSingleTranslationEndpoint();
+
+                using (var webRequest = new UnityWebRequest(endpoint, "POST"))
+                {
+                    // Debug the request values before creating form data
+                    Debug.Log($"[Single API] sourceLanguage: '{request.sourceLanguage}'");
+                    Debug.Log($"[Single API] targetLanguage: '{request.targetLanguage}'");
+                    Debug.Log($"[Single API] textContent: '{request.textContent}'");
+                    Debug.Log($"[Single API] fileContent: '{request.fileContent}'");
+                    Debug.Log($"[Single API] prompt: '{request.prompt}'");
+                    Debug.Log($"[Single API] flag: '{request.flag}'");
+                    Debug.Log($"[Single API] glossaryId: '{request.glossaryId}'");
+
+                    // Create multipart form data with explicit null checks
+                    var formData = new List<IMultipartFormSection>();
+                    
+                    // Add required fields with safety checks
+                    if (!string.IsNullOrEmpty(request.sourceLanguage))
+                        formData.Add(new MultipartFormDataSection("sourceLanguage", request.sourceLanguage));
+                    
+                    if (!string.IsNullOrEmpty(request.targetLanguage))
+                        formData.Add(new MultipartFormDataSection("targetLanguage", request.targetLanguage));
+                        
+                    if (!string.IsNullOrEmpty(request.textContent))
+                        formData.Add(new MultipartFormDataSection("textContent", request.textContent));
+                    
+                    // Optional fields - only add if not null/empty
+                    if (!string.IsNullOrEmpty(request.fileContent))
+                        formData.Add(new MultipartFormDataSection("fileContent", request.fileContent));
+                    
+                    if (!string.IsNullOrEmpty(request.prompt))
+                        formData.Add(new MultipartFormDataSection("prompt", request.prompt));
+                        
+                    if (!string.IsNullOrEmpty(request.flag))
+                        formData.Add(new MultipartFormDataSection("flag", request.flag));
+                    
+                    if (!string.IsNullOrEmpty(request.glossaryId))
+                        formData.Add(new MultipartFormDataSection("glossaryId", request.glossaryId));
+
+                    Debug.Log($"[Single API] Created {formData.Count} form sections");
+
+                    webRequest.uploadHandler = new UploadHandlerRaw(UnityWebRequest.SerializeFormSections(formData, Encoding.UTF8.GetBytes("----boundary----")));
+                    webRequest.downloadHandler = new DownloadHandlerBuffer();
+
+                    // Set headers for multipart/form-data
+                    webRequest.SetRequestHeader("Content-Type", "multipart/form-data; boundary=----boundary----");
+                    webRequest.SetRequestHeader("Accept", "application/json");
+                    SetAuthenticationHeaders(webRequest);
+
+                    // Send request
+                    var operation = webRequest.SendWebRequest();
+
+                    // Wait for completion
+                    while (!operation.isDone)
+                    {
+                        await Task.Yield();
+                    }
+
+                    // Handle response
+                    if (webRequest.result == UnityWebRequest.Result.Success)
+                    {
+                        var responseText = webRequest.downloadHandler.text;
+                        Debug.Log($"Algebras Single API response: {responseText}");
+
+                        var singleResponse = JsonUtility.FromJson<AlgebrasSingleResponse>(responseText);
+
+                        // Convert to legacy format
+                        return new TranslationResponse
+                        {
+                            success = true,
+                            translations = new[]
+                            {
+                                new TranslationResponse.TranslationResult
+                                {
+                                    original = originalText,
+                                    translated = singleResponse.data ?? "",
+                                    confidence = 1.0f // Single mode doesn't provide confidence scores
+                                }
+                            }
+                        };
+                    }
+                    else
+                    {
+                        var error = $"HTTP {webRequest.responseCode}: {webRequest.error}";
+                        if (webRequest.downloadHandler != null)
+                        {
+                            error += $"\nResponse: {webRequest.downloadHandler.text}";
+                        }
+                        Debug.LogError($"Algebras Single API request failed: {error}");
+                        return CreateErrorResponse(error);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Algebras Single API request exception: {ex.Message}");
+                return CreateErrorResponse(ex.Message);
+            }
         }
 
         private async Task<TranslationResponse> SendTranslationRequestAsync(TranslationRequest request)
@@ -220,6 +369,11 @@ namespace Algebras.Localization.Editor
         private string GetTranslationEndpoint()
         {
             return "https://platform.algebras.ai/api/v1/translation/translate-batch";
+        }
+
+        private string GetSingleTranslationEndpoint()
+        {
+            return "https://platform.algebras.ai/api/v1/translation/translate";
         }
 
         private void SetAuthenticationHeaders(UnityWebRequest webRequest)

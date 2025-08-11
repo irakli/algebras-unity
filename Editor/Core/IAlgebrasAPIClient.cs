@@ -18,6 +18,22 @@ namespace Algebras.Localization.Editor
     }
 
     /// <summary>
+    /// Request model for Algebras AI single translation API calls.
+    /// Uses multipart/form-data format.
+    /// </summary>
+    [Serializable]
+    public class AlgebrasSingleRequest
+    {
+        public string sourceLanguage;
+        public string targetLanguage;
+        public string textContent;
+        public string fileContent = ""; // Always empty for text-only translations
+        public string glossaryId = "";
+        public string prompt = "";
+        public string flag = "false"; // ui_safe mode as string
+    }
+
+    /// <summary>
     /// Legacy request model for backwards compatibility.
     /// </summary>
     [Serializable]
@@ -65,6 +81,17 @@ namespace Algebras.Localization.Editor
     }
 
     /// <summary>
+    /// Response model for Algebras AI single translation API calls.
+    /// </summary>
+    [Serializable]
+    public class AlgebrasSingleResponse
+    {
+        public string data;
+        public bool success;
+        public string error;
+    }
+
+    /// <summary>
     /// Legacy response model for backwards compatibility.
     /// </summary>
     [Serializable]
@@ -108,6 +135,7 @@ namespace Algebras.Localization.Editor
 
         /// <summary>
         /// Translates a single text from source to target language.
+        /// Currently routes through batch API for consistency.
         /// </summary>
         /// <param name="text">Text to translate.</param>
         /// <param name="sourceLanguage">Source language code.</param>
@@ -116,6 +144,23 @@ namespace Algebras.Localization.Editor
         /// <param name="options">Translation options.</param>
         /// <returns>Translation response containing result.</returns>
         Task<TranslationResponse> TranslateAsync(
+            string text, 
+            string sourceLanguage, 
+            string targetLanguage, 
+            AlgebrasTableSettings tableSettings,
+            TranslationRequest.TranslationOptions options = null);
+
+        /// <summary>
+        /// Translates a single text using the true single mode API endpoint.
+        /// This method supports glossary and uses multipart/form-data format.
+        /// </summary>
+        /// <param name="text">Text to translate.</param>
+        /// <param name="sourceLanguage">Source language code.</param>
+        /// <param name="targetLanguage">Target language code.</param>
+        /// <param name="tableSettings">Table-specific settings for translation.</param>
+        /// <param name="options">Translation options.</param>
+        /// <returns>Translation response containing result.</returns>
+        Task<TranslationResponse> TranslateSingleAsync(
             string text, 
             string sourceLanguage, 
             string targetLanguage, 
